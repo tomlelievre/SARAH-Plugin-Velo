@@ -4,37 +4,49 @@ const VELOV_LIST_FILENAME = 'velov-stations-list.json';
 
 var request = require('request'),
     jsonfile = require('jsonfile'),
-    address = '145+avenue+Lacassagne,+69903+LYON';
+    address = '145+avenue+Lacassagne,+69903+LYON',
+    properties = {};
 
 exports.action = function (data, callback, config, SARAH) {
 
-    var properties = config.modules.Velov;
+    properties = config.modules.velov;
 
-    if (!properties.city || !properties.jcDecauxApiKey || !properties.googleApikey) {
+    if (!properties.city || !properties.jcDecauxApiKey || !properties.googleApiKey) {
         callback({'tts': "Désolé, ma configuration ne me permet pas de trouver l'adresse demandée."});
         return;
     }
 
-    // TODO: retrieve address from SARAH dictation
-    /*
-     // Retrieves and formats the address in command line arguments
-     if (2 in process.argv)
-     address = formatAddress(process.argv[2]);
-     */
+    var search = data.dictation;
+    var rgxp = /Sarah donne-moi les stations Velo'v les plus proches de l'adresse (.+)/i;
 
-    var geocodingUrl = GEOCODING_URL + '?address=' + address + ',+FR&key=' + config.googleApiKey;
+    // on s'assure que Google a bien compris
+    var match = search.match(rgxp);
+    if (!match || match.length <= 1){
+        callback({'tts': "Je ne comprends pas"});
+        return;
+    }
+
+    // on peut maintenant s'occuper des mots qui sont recherchés
+    address = formatAddress(match[1]);
+
+    var geocodingUrl = GEOCODING_URL + '?address=' + address + ',+FR&key=' + properties.googleApiKey;
 
     // Calls the Google Geocoding API to retrieve the geocoded latitude/longitude value of the address
     callAPI(geocodingUrl, function (geocodingApiResult) {
 
         // Gets the geocoded latitude/longitude value of the address
+        if (typeof geocodingApiResult.results[0] === 'undefined') {
+            callback({'tts': "Je n'arrive pas à trouver l'adresse."});
+            return;
+        }
+
         var geocodingPosition = geocodingApiResult.results[0].geometry.location;
 
         // Retrieves the Velov stations list from JSON file
-        jsonfile.readFile(VELOV_LIST_FILENAME, function (error, velovApiResult) {
+        jsonfile.readFile(__dirname + '\\' + VELOV_LIST_FILENAME, function (error, velovApiResult) {
 
             if (error) {
-                callback({'tts': "Impossible de lire la liste des stations Velov."});
+                callback({'tts': "Impossible de lire la liste des stations Vélov."});
                 return;
             }
 
@@ -43,29 +55,20 @@ exports.action = function (data, callback, config, SARAH) {
 
             // Searching of nearest Velov stations compared to the address (min distance)
             aggregateVelovApiData(findNearestVelovStations(stationDistances, 3), 0, [], function (velovApiData) {
-                console.log(velovApiData);
-                return velovApiData;
+                var velovDataSpeech = convertVelovApiDataInSARAHSpeech(velovApiData);
+                console.log(velovDataSpeech);
+                callback({'tts': velovDataSpeech});
             });
         });
     });
 };
 
+/**
+ *
+ * @param velovApiData
+ * @returns {string}
+ */
 function convertVelovApiDataInSARAHSpeech(velovApiData) {
-    /*
-     { number: 3051,
-     name: '3051 - PLACE HENRI',
-     address: 'Angle rue Docteur Long/av. Lacassagne',
-     position: { lat: 45.748193, lng: 4.880641 },
-     banking: true,
-     bonus: false,
-     status: 'OPEN',
-     contract_name: 'Lyon',
-     bike_stands: 13,
-     available_bike_stands: 12,
-     available_bikes: 0,
-     last_update: 1436196004000 }
-     */
-
     var speech = '';
 
     for (var i in velovApiData) {
@@ -74,17 +77,19 @@ function convertVelovApiDataInSARAHSpeech(velovApiData) {
         speech += 'La station ' + velovData.name;
 
         if (velovData.address != '')
-            speech += ' situé ' + velovData.address;
+            speech += '... situé ' + velovData.address;
 
         if (velovData.status === 'OPEN') {
-            speech += ' est ouverte.';
+            speech += '... est ouverte. ...';
         } else {
-            speech += ' est fermée.';
+            speech += '... est fermée. ...';
             continue;
         }
 
-        speech += velovData.available_bikes + ' vélos sont disponibles et ' + velovData.available_bike_stands + ' places sont libres.';
+        speech += velovData.available_bikes + ' vélos sont disponibles et ' + velovData.available_bike_stands + ' places sont libres.     ';
     }
+
+    return speech;
 }
 
 /**
@@ -95,7 +100,7 @@ function convertVelovApiDataInSARAHSpeech(velovApiData) {
  * @param callback
  */
 function aggregateVelovApiData(nearestStationNumbers, index, velovApiData, callback) {
-    callAPI(VELOV_URL + nearestStationNumbers[index].stationNumber + '?contract=' + config.city + '&apiKey=' + config.jcDecauxApiKey, function (nearestStation) {
+    callAPI(VELOV_URL + nearestStationNumbers[index].stationNumber + '?contract=' + properties.city + '&apiKey=' + properties.jcDecauxApiKey, function (nearestStation) {
         velovApiData.push(nearestStation);
         index++;
 
@@ -161,7 +166,7 @@ function findNearestVelovStations(stationDistances, nbStation) {
  */
 function updateVelovStationList() {
     // Call the JCDecaux Velov API to retrieve stations list
-    callAPI(VELOV_URL + stationNumberArg + '?contract=' + config.city + '&apiKey=' + config.jcDecauxApiKey, function (velovApiResult) {
+    callAPI(VELOV_URL + stationNumberArg + '?contract=' + properties.city + '&apiKey=' + properties.jcDecauxApiKey, function (velovApiResult) {
         jsonfile.writeFile(VELOV_LIST_FILENAME, velovApiResult);
         console.log('Velov stations list file updated');
     });

@@ -1,0 +1,15 @@
+<grammar version="1.0" xml:lang="fr-FR" mode="voice" root="ruleVelov" xmlns="http://www.w3.org/2001/06/grammar" tag-format="semantics/1.0">
+    <rule id="ruleVelov" scope="public">
+        <example>Sarah vélo.</example>
+        <tag>out.action=new Object();</tag>
+
+        <item>Sarah</item>
+
+        <one-of>
+            <item>donne moi les stations vélov les plus proches de l'adresse <ruleref special="GARBAGE" /></item>
+        </one-of>
+
+        <tag>out.action._attributes.uri="http://127.0.0.1:8081/sarah/velov";</tag>
+        <tag>out.action._attributes.dictation="true";</tag>
+    </rule>
+</grammar>
