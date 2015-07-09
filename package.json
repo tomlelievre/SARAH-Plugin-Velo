@@ -1,0 +1,13 @@
+{
+  "name": "SARAH-Plugin-Velov",
+  "author": "Thomas Lelievre",
+  "license": "",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Plugin SARAH permettant de connaitre le nombre de vélo/place disponible dans une station Vélov spécifique",
+  "keywords": [],
+  "dependencies": {
+    "jsonfile": "^2.2.1",
+    "request": "^2.58.0"
+  }
+}
