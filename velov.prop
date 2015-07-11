@@ -1,7 +1,7 @@
 {
   "modules": {
     "velov": {
-      "description": "Plugin SARAH permettant de connaitre le nombre de vélo/place disponible dans une station Vélov spécifique",
+      "description": "Plugin Vélo'v pour SARAH",
       "version": "0.0.1",
       "city": "Lyon",
       "station": "",
