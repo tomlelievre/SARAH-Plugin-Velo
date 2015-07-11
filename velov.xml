@@ -6,7 +6,15 @@
         <item>Sarah</item>
 
         <one-of>
-            <item>donne moi les stations vélov les plus proches de l'adresse <ruleref special="GARBAGE" /></item>
+            <item>donne moi la station vélov la plus proche de l'adresse <ruleref special="GARBAGE" />
+                <tag>out.action.action="address";</tag>
+            </item>
+            <item>donne moi les informations vélov
+                <tag>out.action.action="common";</tag>
+            </item>
+            <item>met à jour la liste des stations vélov
+                <tag>out.action.action="update_velov_file";</tag>
+            </item>
         </one-of>
 
         <tag>out.action._attributes.uri="http://127.0.0.1:8081/sarah/velov";</tag>

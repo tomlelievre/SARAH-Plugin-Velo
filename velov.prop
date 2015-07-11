@@ -4,9 +4,9 @@
       "description": "Plugin Vélo'v pour SARAH",
       "version": "0.0.1",
       "city": "Lyon",
-      "station": "",
-      "jcDecauxApiKey": "c3531e7085e799cc99b891cccabcf2bc416b788d",
-      "googleApiKey": "AIzaSyCetZZXxCXP_bg5U34zfXtO13WKCQUrgsE"
+      "address": "3 rue des Près, 69909 LYON",
+      "jcDecauxApiKey": "",
+      "googleApiKey": ""
     }
   }
 }
