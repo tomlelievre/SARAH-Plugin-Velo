@@ -16,8 +16,11 @@ const GEOCODING_API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 const STATIONS_LIST_FILENAME = 'stations-list.json';
 const DICTATION_REGEX = /Sarah donne-moi la station Velo'v la plus proche de l'adresse (.+)/i;
 
-exports.action = function (data, callback, config, SARAH) {
+exports.init = function() {
+    updateStationsList();
+};
 
+exports.action = function (data, callback, config) {
     properties = config.modules.velo;
 
     if (!properties.city || !properties.jcDecauxApiKey || !properties.geocodingApiKey)
@@ -26,6 +29,7 @@ exports.action = function (data, callback, config, SARAH) {
     var address = '';
 
     switch (data.action) {
+        // Searching by address
         case 'address':
             var search = data.dictation,
                 rgxp = DICTATION_REGEX,
@@ -40,10 +44,12 @@ exports.action = function (data, callback, config, SARAH) {
             getStationDataByAddress(address, callback);
             break;
         case 'update_stations_list':
+            // Updating of the stations list (rewrites the json file)
             updateStationsList(callback);
             break;
         default:
         case 'common':
+            // Searching by favorite station number/address
             if (properties.stationNumber) {
                 getStationDataByStationNumber(properties.stationNumber, callback);
             } else if (properties.address) {
@@ -214,7 +220,9 @@ var getStationDataByAddress = function (address, callback) {
             jsonfile.writeFile(__dirname + '\\' + STATIONS_LIST_FILENAME, jcDecauxApiResult);
 
             console.log('Stations list file updated');
-            return callback({'tts': 'La liste des stations à bien été mise à jour'});
+
+            if (callback)
+                return callback({'tts': 'La liste des stations à bien été mise à jour'});
         });
     },
 
