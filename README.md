@@ -10,9 +10,7 @@ Pour ce faire, il vous suffit de modifier le champs `city` dans le fichier `velo
 ```javascript
         "city": "[Contract name]",
 ```
-(Pour une question de logique, il faudrait aussi modifier la grammaire xml ainsi que la constante `DICTATION_REGEX` du fichier `velo.js`).
-
-
+(Pour une question de logique, il faudrait aussi modifier la grammaire xml ainsi que la constante `DICTATION_REGEX` du fichier `velo.js`).      
 
 Ce plugin utilise deux APIs:
 
@@ -26,18 +24,14 @@ Pour utiliser ce plugin il vous faudra donc récupérer deux API keys à renseig
 ```javascript
         "jcDecauxApiKey": "[Your JCDecaux API key]",
         "geocodingApiKey": "[Your Google Geocoding API key]"
-```
-
-
+```      
 
 Vous pouvez ajouter dans le fichier de configuration `velo.prop` une adresse favorite ou un numéro de station favoris.
 ```javascript
         "address": "3 rue des Près, 69909 LYON",
         "stationNumber": "9002"
 ```
-Le fait de rechercher par numéro de station est plus performant que par adresse (un appel API en moins).
-
-
+La recherche par numéro de station est plus performante que par adresse (un appel API en moins).      
 
 Pour des questions de performance, la liste des stations est lu à partir d'un fichier json (pour ne pas faire trop d'appel API).  
 Afin de mettre à jour ce fichier avec les données retournées par la JCDecaux API, il faut utiliser la commande vocale S.A.R.A.H. `"met à jour la liste des stations vélov"`.
