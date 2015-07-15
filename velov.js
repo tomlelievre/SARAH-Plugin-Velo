@@ -24,7 +24,7 @@ exports.action = function (data, callback, config, SARAH) {
 
     var address = '';
 
-    switch(data.action) {
+    switch (data.action) {
         case 'address':
             var search = data.dictation,
                 rgxp = /Sarah donne-moi la station Velo'v la plus proche de l'adresse (.+)/i,
@@ -52,7 +52,7 @@ exports.action = function (data, callback, config, SARAH) {
     }
 };
 
-var getVelovStationDataByAddress = function(address, callback) {
+var getVelovStationDataByAddress = function (address, callback) {
         var geocodingUrl = GEOCODING_URL + '?address=' + address + ',+FR&key=' + properties.googleApiKey;
 
         // Calls the Google Geocoding API to retrieve the geocoded latitude/longitude value of the address
@@ -123,7 +123,7 @@ var getVelovStationDataByAddress = function(address, callback) {
      * @param search
      * @param regex
      */
-    checkGoogleUnderstanding = function(search, regex) {
+    checkGoogleUnderstanding = function (search, regex) {
         var match = search.match(regex);
 
         if (!match || match.length <= 1)
@@ -182,7 +182,7 @@ var getVelovStationDataByAddress = function(address, callback) {
                 stationNumber: stationVelov.number,
                 distance: 6371 * Math.acos(Math.cos(radians(geocodingPosition.lat))
                 * Math.cos(radians(stationVelov.position.lat))
-                * Math.cos(radians(stationVelov.position.lng) -  radians(geocodingPosition.lng))
+                * Math.cos(radians(stationVelov.position.lng) - radians(geocodingPosition.lng))
                 + Math.sin(radians(geocodingPosition.lat))
                 * Math.sin(radians(stationVelov.position.lat)))
             });
