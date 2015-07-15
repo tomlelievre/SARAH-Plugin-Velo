@@ -1,12 +1,44 @@
-#SARAH-Plugin-Velov
+#SARAH-Plugin-Velo
 
-Plugin Vélo'v pour S.A.R.A.H
+Plugin vélo libre-service (Vélo'v, Vélib, ...etc.) pour S.A.R.A.H. (Self Actuated Residential Automated Habitat)  
+[En savoir plus sur S.A.R.A.H.](http://blog.encausse.net/s-a-r-a-h/)
+
+##Documentation
+
+Ce plugin a été testé avec le service de vélo libre-service Vélo'v (Lyon) mais vous pouvez très facilement changer de service.  
+Pour ce faire, il vous suffit de modifier le champs `city` dans le fichier `velo.prop` en renseignant un des noms de contrat disponible à cette URL : [https://developer.jcdecaux.com/#/opendata/vls?page=static](https://developer.jcdecaux.com/#/opendata/vls?page=static)  
+```
+        "city": "[Contract name]",
+```
+
+Ce plugin utilise deux APIs:
+
+* Google Gecoding API ([https://developers.google.com/maps/documentation/geocoding/intro](https://developers.google.com/maps/documentation/geocoding/intro))
+* JCDecaux API ([https://developer.jcdecaux.com/#/opendata/vls?page=getstarted](https://developer.jcdecaux.com/#/opendata/vls?page=getstarted))
+
+L'API Google permet de retrouver la longitude et la latitude d'un adresse donnée.  
+L'API JCDecaux permet de récuperer les informations sur les stations de vélo en libre-service.  
+
+Pour utiliser ce plugin il vous faudra donc récupérer deux API keys à renseigner dans le fichier `velo.prop` :  
+```
+        "jcDecauxApiKey": "[Your JCDecaux API key]",
+        "geocodingApiKey": "[Your Google Geocoding API key]"
+```
+
+Pour des questions de performance, la liste des stations est lu à partir d'un fichier json (pour ne pas faire trop d'appel API).  
+Afin de mettre à jour ce fichier avec les données retournées par la JCDecaux API, il faut utiliser l'ordre S.A.R.A.H "met à jour la liste des stations vélov".
+
+##Utilisation
+
+
+
+##Compatibilité
 
 ##License
 
 The MIT License (MIT)
 
-Copyright (c) 2015, Thomas Lelievre
+Copyright (c) 2015, Thomas Lelievre toma.jackrabbit@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

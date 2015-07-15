@@ -1,5 +1,5 @@
 /*************************************************************************
- *  SARAH-Plugin-Velov - velov.js
+ *  SARAH-Plugin-Velo - velo.js
  *************************************************************************
  *  @author
  *      Thomas Lelievre <toma.jackrabbit@gmail.com>
@@ -11,15 +11,15 @@ var request = require('request'),
     jsonfile = require('jsonfile'),
     properties;
 
-const VELOV_URL = "https://api.jcdecaux.com/vls/v1/stations/";
-const GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json";
-const VELOV_LIST_FILENAME = 'velov-stations-list.json';
+const JCDECAUX_API_URL = "https://api.jcdecaux.com/vls/v1/stations/";
+const GEOCODING_API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
+const STATIONS_LIST_FILENAME = 'stations-list.json';
 
 exports.action = function (data, callback, config, SARAH) {
 
-    properties = config.modules.velov;
+    properties = config.modules.velo;
 
-    if (!properties.city || !properties.jcDecauxApiKey || !properties.googleApiKey)
+    if (!properties.city || !properties.jcDecauxApiKey || !properties.geocodingApiKey)
         return callback({'tts': "Désolé, ma configuration ne me permet pas d'utiliser convenablement ce pleuguine."});
 
     var address = '';
@@ -36,24 +36,24 @@ exports.action = function (data, callback, config, SARAH) {
             else
                 return callback({'tts': "Je ne comprends pas."});
 
-            getVelovStationDataByAddress(address, callback);
+            getStationDataByAddress(address, callback);
             break;
-        case 'update_velov_file':
-            updateVelovStationList(callback);
+        case 'update_stations_list':
+            updateStationsList(callback);
             break;
         default:
         case 'common':
             if (!properties.address)
-                return callback({'tts': "Veuillez renseigner une adresse dans la configuration du plugin vélove."});
+                return callback({'tts': "Veuillez renseigner une adresse dans la configuration du plugin vélo."});
 
             address = formatAddress(properties.address)
-            getVelovStationDataByAddress(address, callback);
+            getStationDataByAddress(address, callback);
             break;
     }
 };
 
-var getVelovStationDataByAddress = function (address, callback) {
-        var geocodingUrl = GEOCODING_URL + '?address=' + address + ',+FR&key=' + properties.googleApiKey;
+var getStationDataByAddress = function (address, callback) {
+        var geocodingUrl = GEOCODING_API_URL + '?address=' + address + ',+FR&key=' + properties.geocodingApiKey;
 
         // Calls the Google Geocoding API to retrieve the geocoded latitude/longitude value of the address
         callAPI(geocodingUrl, function (geocodingApiResult) {
@@ -64,52 +64,52 @@ var getVelovStationDataByAddress = function (address, callback) {
 
             var geocodingPosition = geocodingApiResult.results[0].geometry.location;
 
-            // Retrieves the Velov stations list from JSON file
-            jsonfile.readFile(__dirname + '\\' + VELOV_LIST_FILENAME, function (error, velovApiResult) {
+            // Retrieves the stations list from JSON file
+            jsonfile.readFile(__dirname + '\\' + STATIONS_LIST_FILENAME, function (error, jcdecauxApiResult) {
 
                 if (error)
-                    return callback({'tts': "Impossible de lire la liste des stations Vélove."});
+                    return callback({'tts': "Impossible de lire la liste des stations."});
 
-                // Calculation of the distance between Velov station and address geocoded latitude/longitude values
-                var stationDistances = computeGeopositionDistances(velovApiResult, geocodingPosition);
+                // Calculation of the distance between station and address geocoded latitude/longitude values
+                var stationDistances = computeGeopositionDistances(jcdecauxApiResult, geocodingPosition);
 
-                // Searching of nearest Velov stations compared to the address (min distance)
-                aggregateVelovApiData(findNearestVelovStations(stationDistances, 1), 0, [], function (velovApiData) {
-                    var velovDataSpeech = convertVelovApiDataInSARAHSpeech(velovApiData);
-                    callback({'tts': velovDataSpeech});
+                // Searching of nearest stations compared to the address (min distance)
+                aggregateJCDecauxApiData(findNearestStations(stationDistances, 1), 0, [], function (jcdecauxApiData) {
+                    var veloDataSpeech = convertJCDecauxApiDataInSARAHSpeech(jcdecauxApiData);
+                    callback({'tts': veloDataSpeech});
                 });
             });
         });
     },
 
     /**
-     * @param velovApiData
+     * @param jcdecauxApiData
      * @returns {string}
      */
-    convertVelovApiDataInSARAHSpeech = function (velovApiData) {
+    convertJCDecauxApiDataInSARAHSpeech = function (jcdecauxApiData) {
         var speech = '';
 
-        for (var i in velovApiData) {
-            var velovData = velovApiData[i];
+        for (var i in jcdecauxApiData) {
+            var veloData = jcdecauxApiData[i];
 
-            speech += 'La station ' + velovData.name;
+            speech += 'La station ' + veloData.name;
 
-            if (velovData.address != '')
-                speech += '... situé ' + velovData.address;
+            if (veloData.address != '')
+                speech += '... situé ' + veloData.address;
 
-            if (velovData.status === 'OPEN') {
+            if (veloData.status === 'OPEN') {
                 speech += '... est ouverte. ...';
             } else {
                 speech += '... est fermée. ...';
                 continue;
             }
 
-            speech += conjugate(velovData.available_bikes,
+            speech += conjugate(veloData.available_bikes,
                 ' {nb} vélos sont disponibles et ',
                 ' un vélo est disponible et ',
                 ' aucun vélo n\'est disponible et ');
 
-            speech += conjugate(velovData.available_bike_stands,
+            speech += conjugate(veloData.available_bike_stands,
                 ' {nb} places sont libres.     ',
                 ' une place est libre.     ',
                 ' aucune place n\'est libre.     ');
@@ -133,23 +133,23 @@ var getVelovStationDataByAddress = function (address, callback) {
     },
 
     /**
-     * Aggregates the several Velov API returned data
+     * Aggregates the several JCDecaux API returned data
      * @param nearestStationNumbers
      * @param index
-     * @param velovApiData
+     * @param jcdecauxApiData
      * @param callback
      */
-    aggregateVelovApiData = function (nearestStationNumbers, index, velovApiData, callback) {
-        callAPI(VELOV_URL + nearestStationNumbers[index].stationNumber
+    aggregateJCDecauxApiData = function (nearestStationNumbers, index, jcdecauxApiData, callback) {
+        callAPI(JCDECAUX_API_URL + nearestStationNumbers[index].stationNumber
         + '?contract=' + properties.city
         + '&apiKey=' + properties.jcDecauxApiKey, function (nearestStation) {
-            velovApiData.push(nearestStation);
+            jcdecauxApiData.push(nearestStation);
             index++;
 
             if (index < nearestStationNumbers.length)
-                aggregateVelovApiData(nearestStationNumbers, index, velovApiData, callback)
+                aggregateJCDecauxApiData(nearestStationNumbers, index, jcdecauxApiData, callback)
             else
-                callback(velovApiData);
+                callback(jcdecauxApiData);
         });
     },
 
@@ -170,21 +170,21 @@ var getVelovStationDataByAddress = function (address, callback) {
     },
 
     /**
-     * Computes distances between the Velov station and address geocoded latitude/longitude values
-     * @param velovApiResult
+     * Computes distances between the station and address geocoded latitude/longitude values
+     * @param jcdecauxApiResult
      * @param geocodingPosition
      */
-    computeGeopositionDistances = function (velovApiResult, geocodingPosition) {
+    computeGeopositionDistances = function (jcdecauxApiResult, geocodingPosition) {
         var stationDistances = [];
-        for (var i in velovApiResult) {
-            var stationVelov = velovApiResult[i];
+        for (var i in jcdecauxApiResult) {
+            var station = jcdecauxApiResult[i];
             stationDistances.push({
-                stationNumber: stationVelov.number,
+                stationNumber: station.number,
                 distance: 6371 * Math.acos(Math.cos(radians(geocodingPosition.lat))
-                * Math.cos(radians(stationVelov.position.lat))
-                * Math.cos(radians(stationVelov.position.lng) - radians(geocodingPosition.lng))
+                * Math.cos(radians(station.position.lat))
+                * Math.cos(radians(station.position.lng) - radians(geocodingPosition.lng))
                 + Math.sin(radians(geocodingPosition.lat))
-                * Math.sin(radians(stationVelov.position.lat)))
+                * Math.sin(radians(station.position.lat)))
             });
         }
 
@@ -192,11 +192,11 @@ var getVelovStationDataByAddress = function (address, callback) {
     },
 
     /**
-     * Searching of the nearest Velov station compared to the address (min distance)
+     * Searching of the nearest station compared to the address (min distance)
      * @param stationDistances
      * @param nbStation
      */
-    findNearestVelovStations = function (stationDistances, nbStation) {
+    findNearestStations = function (stationDistances, nbStation) {
         stationDistances.sort(function (a, b) {
             return parseFloat(a.distance) - parseFloat(b.distance);
         });
@@ -205,18 +205,18 @@ var getVelovStationDataByAddress = function (address, callback) {
     },
 
     /**
-     * Writes a json file with all Velov station informations
+     * Writes a json file with all station informations
      * @param callback
      */
-    updateVelovStationList = function (callback) {
-        // Call the JCDecaux Velov API to retrieve stations list
-        callAPI(VELOV_URL
+    updateStationsList = function (callback) {
+        // Call the JCDecaux API to retrieve stations list
+        callAPI(JCDECAUX_API_URL
         + '?contract=' + properties.city
-        + '&apiKey=' + properties.jcDecauxApiKey, function (velovApiResult) {
-            jsonfile.writeFile(__dirname + '\\' + VELOV_LIST_FILENAME, velovApiResult);
+        + '&apiKey=' + properties.jcDecauxApiKey, function (jcdecauxApiResult) {
+            jsonfile.writeFile(__dirname + '\\' + STATIONS_LIST_FILENAME, jcdecauxApiResult);
 
-            console.log('Velov stations list file updated');
-            return callback({'tts': 'La liste des stations Vélove à bien été mise à jour'});
+            console.log('Stations list file updated');
+            return callback({'tts': 'La liste des stations à bien été mise à jour'});
         });
     },
 

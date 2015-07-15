@@ -1,12 +1,12 @@
 {
   "modules": {
-    "velov": {
-      "description": "Plugin Vélo'v pour SARAH",
+    "velo": {
+      "description": "Plugin vélo libre-service JCDecaux (Vélo'v, Vélib, ...etc.) pour S.A.R.A.H.",
       "version": "0.0.1",
       "city": "Lyon",
       "address": "3 rue des Près, 69909 LYON",
       "jcDecauxApiKey": "",
-      "googleApiKey": ""
+      "geocodingApiKey": ""
     }
   }
 }

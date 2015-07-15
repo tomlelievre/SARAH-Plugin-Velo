@@ -1,6 +1,6 @@
-<grammar version="1.0" xml:lang="fr-FR" mode="voice" root="ruleVelov" xmlns="http://www.w3.org/2001/06/grammar" tag-format="semantics/1.0">
-    <rule id="ruleVelov" scope="public">
-        <example>Sarah vélo.</example>
+<grammar version="1.0" xml:lang="fr-FR" mode="voice" root="ruleVelo" xmlns="http://www.w3.org/2001/06/grammar" tag-format="semantics/1.0">
+    <rule id="ruleVelo" scope="public">
+        <example>Sarah donne moi les informations vélov.</example>
         <tag>out.action=new Object();</tag>
 
         <item>Sarah</item>
@@ -13,11 +13,11 @@
                 <tag>out.action.action="common";</tag>
             </item>
             <item>met à jour la liste des stations vélov
-                <tag>out.action.action="update_velov_file";</tag>
+                <tag>out.action.action="update_stations_list";</tag>
             </item>
         </one-of>
 
-        <tag>out.action._attributes.uri="http://127.0.0.1:8081/sarah/velov";</tag>
+        <tag>out.action._attributes.uri="http://127.0.0.1:8081/sarah/velo";</tag>
         <tag>out.action._attributes.dictation="true";</tag>
     </rule>
 </grammar>
