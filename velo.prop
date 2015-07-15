@@ -5,7 +5,7 @@
       "version": "0.0.1",
       "city": "Lyon",
       "address": "3 rue des Près, 69909 LYON",
-      "stationNumber": "9002"
+      "stationNumber": "9002",
       "jcDecauxApiKey": "",
       "geocodingApiKey": ""
     }
