@@ -44,8 +44,8 @@ exports.action = function (data, callback, config, SARAH) {
             break;
         default:
         case 'common':
-            if (!properties.address)
-                return callback({'tts': "Veuillez renseigner une adresse dans la configuration du plugin vélo."});
+            if (!properties.address || !properties.stationNumber)
+                return callback({'tts': "Veuillez renseigner une adresse ou un numéro de station dans la configuration du pleuguine vélo."});
 
             address = formatAddress(properties.address)
             getStationDataByAddress(address, callback);
