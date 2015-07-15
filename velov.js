@@ -9,8 +9,7 @@
 
 var request = require('request'),
     jsonfile = require('jsonfile'),
-    properties,
-    data;
+    properties;
 
 const VELOV_URL = "https://api.jcdecaux.com/vls/v1/stations/";
 const GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json";
