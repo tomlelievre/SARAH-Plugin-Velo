@@ -14,6 +14,7 @@ var request = require('request'),
 const JCDECAUX_API_URL = "https://api.jcdecaux.com/vls/v1/stations/";
 const GEOCODING_API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 const STATIONS_LIST_FILENAME = 'stations-list.json';
+const DICTATION_REGEX = /Sarah donne-moi la station Velo'v la plus proche de l'adresse (.+)/i;
 
 exports.action = function (data, callback, config, SARAH) {
 
@@ -27,7 +28,7 @@ exports.action = function (data, callback, config, SARAH) {
     switch (data.action) {
         case 'address':
             var search = data.dictation,
-                rgxp = /Sarah donne-moi la station Velo'v la plus proche de l'adresse (.+)/i,
+                rgxp = DICTATION_REGEX,
                 match;
 
             // Checks Google understanding with the regexs

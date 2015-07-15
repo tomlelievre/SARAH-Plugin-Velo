@@ -3,13 +3,14 @@
 Plugin vélo libre-service (Vélo'v, Vélib, ...etc.) pour S.A.R.A.H. (Self Actuated Residential Automated Habitat)  
 [En savoir plus sur S.A.R.A.H.](http://blog.encausse.net/s-a-r-a-h/)
 
-##Documentation
+##Configuration
 
-Ce plugin a été testé avec le service de vélo libre-service Vélo'v (Lyon) mais vous pouvez très facilement changer de service.  
+__Ce plugin a été testé avec le service de vélo libre-service Vélo'v (Lyon) mais vous pouvez très facilement changer de service.__  
 Pour ce faire, il vous suffit de modifier le champs `city` dans le fichier `velo.prop` en renseignant un des noms de contrat disponible à cette URL : [https://developer.jcdecaux.com/#/opendata/vls?page=static](https://developer.jcdecaux.com/#/opendata/vls?page=static)  
-```
+```javascript
         "city": "[Contract name]",
 ```
+(Pour une question de logique, il faudrait aussi modifier la grammaire xml ainsi que la constante `DICTATION_REGEX` du fichier `velo.js`).
 
 Ce plugin utilise deux APIs:
 
@@ -20,13 +21,13 @@ L'API Google permet de retrouver la longitude et la latitude d'un adresse donné
 L'API JCDecaux permet de récuperer les informations sur les stations de vélo en libre-service.  
 
 Pour utiliser ce plugin il vous faudra donc récupérer deux API keys à renseigner dans le fichier `velo.prop` :  
-```
+```javascript
         "jcDecauxApiKey": "[Your JCDecaux API key]",
         "geocodingApiKey": "[Your Google Geocoding API key]"
 ```
 
 Pour des questions de performance, la liste des stations est lu à partir d'un fichier json (pour ne pas faire trop d'appel API).  
-Afin de mettre à jour ce fichier avec les données retournées par la JCDecaux API, il faut utiliser l'ordre S.A.R.A.H "met à jour la liste des stations vélov".
+Afin de mettre à jour ce fichier avec les données retournées par la JCDecaux API, il faut utiliser la commande vocale S.A.R.A.H `"met à jour la liste des stations vélov"`.
 
 ##Utilisation
 
