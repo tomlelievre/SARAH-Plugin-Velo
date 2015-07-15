@@ -44,15 +44,22 @@ exports.action = function (data, callback, config, SARAH) {
             break;
         default:
         case 'common':
-            if (!properties.address || !properties.stationNumber)
+            if (properties.stationNumber) {
+                getStationDataByStationNumber(properties.stationNumber, callback);
+            } else if (properties.address) {
+                address = formatAddress(properties.address)
+                getStationDataByAddress(address, callback);
+            } else {
                 return callback({'tts': "Veuillez renseigner une adresse ou un numéro de station dans la configuration du pleuguine vélo."});
-
-            address = formatAddress(properties.address)
-            getStationDataByAddress(address, callback);
+            }
             break;
     }
 };
 
+/**
+ * @param address
+ * @param callback
+ */
 var getStationDataByAddress = function (address, callback) {
         var geocodingUrl = GEOCODING_API_URL + '?address=' + address + ',+FR&key=' + properties.geocodingApiKey;
 
@@ -66,32 +73,44 @@ var getStationDataByAddress = function (address, callback) {
             var geocodingPosition = geocodingApiResult.results[0].geometry.location;
 
             // Retrieves the stations list from JSON file
-            jsonfile.readFile(__dirname + '\\' + STATIONS_LIST_FILENAME, function (error, jcdecauxApiResult) {
+            jsonfile.readFile(__dirname + '\\' + STATIONS_LIST_FILENAME, function (error, jcDecauxApiResult) {
 
                 if (error)
                     return callback({'tts': "Impossible de lire la liste des stations."});
 
                 // Calculation of the distance between station and address geocoded latitude/longitude values
-                var stationDistances = computeGeopositionDistances(jcdecauxApiResult, geocodingPosition);
+                var stationDistances = computeGeopositionDistances(jcDecauxApiResult, geocodingPosition);
 
-                // Searching of nearest stations compared to the address (min distance)
-                aggregateJCDecauxApiData(findNearestStations(stationDistances, 1), 0, [], function (jcdecauxApiData) {
-                    var veloDataSpeech = convertJCDecauxApiDataInSARAHSpeech(jcdecauxApiData);
-                    callback({'tts': veloDataSpeech});
-                });
+                // Searching of nearest station compared to the address (min distance)
+                var nearestStation = findNearestStation(stationDistances);
+
+                getStationDataByStationNumber(nearestStation.stationNumber, callback);
             });
         });
     },
 
     /**
-     * @param jcdecauxApiData
+     * @param stationNumber
+     * @param callback
+     */
+    getStationDataByStationNumber = function (stationNumber, callback) {
+        callAPI(JCDECAUX_API_URL + stationNumber
+        + '?contract=' + properties.city
+        + '&apiKey=' + properties.jcDecauxApiKey, function (jcDecauxApiData) {
+            var veloDataSpeech = convertJCDecauxApiDataInSARAHSpeech(jcDecauxApiData);
+            callback({'tts': veloDataSpeech});
+        });
+    },
+
+    /**
+     * @param jcDecauxApiData
      * @returns {string}
      */
-    convertJCDecauxApiDataInSARAHSpeech = function (jcdecauxApiData) {
+    convertJCDecauxApiDataInSARAHSpeech = function (jcDecauxApiData) {
         var speech = '';
 
-        for (var i in jcdecauxApiData) {
-            var veloData = jcdecauxApiData[i];
+        for (var i in jcDecauxApiData) {
+            var veloData = jcDecauxApiData[i];
 
             speech += 'La station ' + veloData.name;
 
@@ -134,27 +153,6 @@ var getStationDataByAddress = function (address, callback) {
     },
 
     /**
-     * Aggregates the several JCDecaux API returned data
-     * @param nearestStationNumbers
-     * @param index
-     * @param jcdecauxApiData
-     * @param callback
-     */
-    aggregateJCDecauxApiData = function (nearestStationNumbers, index, jcdecauxApiData, callback) {
-        callAPI(JCDECAUX_API_URL + nearestStationNumbers[index].stationNumber
-        + '?contract=' + properties.city
-        + '&apiKey=' + properties.jcDecauxApiKey, function (nearestStation) {
-            jcdecauxApiData.push(nearestStation);
-            index++;
-
-            if (index < nearestStationNumbers.length)
-                aggregateJCDecauxApiData(nearestStationNumbers, index, jcdecauxApiData, callback)
-            else
-                callback(jcdecauxApiData);
-        });
-    },
-
-    /**
      * Calls API and returns the response in JSON format
      * @param url
      * @param callback
@@ -172,13 +170,13 @@ var getStationDataByAddress = function (address, callback) {
 
     /**
      * Computes distances between the station and address geocoded latitude/longitude values
-     * @param jcdecauxApiResult
+     * @param jcDecauxApiResult
      * @param geocodingPosition
      */
-    computeGeopositionDistances = function (jcdecauxApiResult, geocodingPosition) {
+    computeGeopositionDistances = function (jcDecauxApiResult, geocodingPosition) {
         var stationDistances = [];
-        for (var i in jcdecauxApiResult) {
-            var station = jcdecauxApiResult[i];
+        for (var i in jcDecauxApiResult) {
+            var station = jcDecauxApiResult[i];
             stationDistances.push({
                 stationNumber: station.number,
                 distance: 6371 * Math.acos(Math.cos(radians(geocodingPosition.lat))
@@ -195,14 +193,13 @@ var getStationDataByAddress = function (address, callback) {
     /**
      * Searching of the nearest station compared to the address (min distance)
      * @param stationDistances
-     * @param nbStation
      */
-    findNearestStations = function (stationDistances, nbStation) {
+    findNearestStation = function (stationDistances) {
         stationDistances.sort(function (a, b) {
             return parseFloat(a.distance) - parseFloat(b.distance);
         });
 
-        return stationDistances.slice(0, nbStation);
+        return stationDistances[0];
     },
 
     /**
@@ -213,8 +210,8 @@ var getStationDataByAddress = function (address, callback) {
         // Call the JCDecaux API to retrieve stations list
         callAPI(JCDECAUX_API_URL
         + '?contract=' + properties.city
-        + '&apiKey=' + properties.jcDecauxApiKey, function (jcdecauxApiResult) {
-            jsonfile.writeFile(__dirname + '\\' + STATIONS_LIST_FILENAME, jcdecauxApiResult);
+        + '&apiKey=' + properties.jcDecauxApiKey, function (jcDecauxApiResult) {
+            jsonfile.writeFile(__dirname + '\\' + STATIONS_LIST_FILENAME, jcDecauxApiResult);
 
             console.log('Stations list file updated');
             return callback({'tts': 'La liste des stations à bien été mise à jour'});
