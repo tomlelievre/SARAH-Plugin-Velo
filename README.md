@@ -42,13 +42,13 @@ Afin de mettre à jour ce fichier avec les données retournées par la JCDecaux 
 Commande vocale  
 `Sarah donne moi la station vélov la plus proche de l'adresse 3 rue des Près, 69009 LYON`  
 Retour  
-``
+`La station 9002 - MAIRIE du 9ème, situé Prox. métro Valmy est ouverte. 5 vélos sont disponibles et 17 places sont libres.`
 
 ###2 - Par station/adresse favorite
 Commande vocale  
 `Sarah donne moi les informations vélov`  
 Retour  
-``
+`La station 9002 - MAIRIE du 9ème, situé Prox. métro Valmy est ouverte. 5 vélos sont disponibles et 17 places sont libres.`
 
 ###3 - Mise à jour de la liste des stations
 Commande vocale  
