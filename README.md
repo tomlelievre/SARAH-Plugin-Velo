@@ -58,6 +58,8 @@ Retour
 
 ##Compatibilité
 
+Ce plugin a été testé avec NodeJS en version v0.12.6 et S.A.R.A.H en version v3.
+
 ##License
 
 The MIT License (MIT)
