@@ -16,13 +16,13 @@ const GEOCODING_API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 const STATIONS_LIST_FILENAME = 'stations-list.json';
 const DICTATION_REGEX = /Sarah donne-moi la station Velo'v la plus proche de l'adresse (.+)/i;
 
-exports.init = function() {
+exports.init = function (SARAH) {
+    var config = SARAH.ConfigManager.getConfig();
+    properties = config.modules.velo;
     updateStationsList();
 };
 
 exports.action = function (data, callback, config) {
-    properties = config.modules.velo;
-
     if (!properties.city || !properties.jcDecauxApiKey || !properties.geocodingApiKey)
         return callback({'tts': "Désolé, ma configuration ne me permet pas d'utiliser convenablement ce pleuguine."});
 
@@ -79,13 +79,13 @@ var getStationDataByAddress = function (address, callback) {
             var geocodingPosition = geocodingApiResult.results[0].geometry.location;
 
             // Retrieves the stations list from JSON file
-            jsonfile.readFile(__dirname + '\\' + STATIONS_LIST_FILENAME, function (error, jcDecauxApiResult) {
+            jsonfile.readFile(__dirname + '\\' + STATIONS_LIST_FILENAME, function (error, stationsListResult) {
 
                 if (error)
                     return callback({'tts': "Impossible de lire la liste des stations."});
 
                 // Calculation of the distance between station and address geocoded latitude/longitude values
-                var stationDistances = computeGeopositionDistances(jcDecauxApiResult, geocodingPosition);
+                var stationDistances = computeGeopositionDistances(stationsListResult, geocodingPosition);
 
                 // Searching of nearest station compared to the address (min distance)
                 var nearestStation = findNearestStation(stationDistances);
@@ -113,33 +113,27 @@ var getStationDataByAddress = function (address, callback) {
      * @returns {string}
      */
     convertJCDecauxApiDataInSARAHSpeech = function (jcDecauxApiData) {
-        var speech = '';
+        var speech = 'La station ' + jcDecauxApiData.name;
 
-        for (var i in jcDecauxApiData) {
-            var veloData = jcDecauxApiData[i];
+        if (jcDecauxApiData.address != '')
+            speech += '... situé ' + jcDecauxApiData.address;
 
-            speech += 'La station ' + veloData.name;
-
-            if (veloData.address != '')
-                speech += '... situé ' + veloData.address;
-
-            if (veloData.status === 'OPEN') {
-                speech += '... est ouverte. ...';
-            } else {
-                speech += '... est fermée. ...';
-                continue;
-            }
-
-            speech += conjugate(veloData.available_bikes,
-                ' {nb} vélos sont disponibles et ',
-                ' un vélo est disponible et ',
-                ' aucun vélo n\'est disponible et ');
-
-            speech += conjugate(veloData.available_bike_stands,
-                ' {nb} places sont libres.     ',
-                ' une place est libre.     ',
-                ' aucune place n\'est libre.     ');
+        if (jcDecauxApiData.status === 'OPEN') {
+            speech += '... est ouverte. ...';
+        } else {
+            speech += '... est fermée. ...';
+            return speech;
         }
+
+        speech += conjugate(jcDecauxApiData.available_bikes,
+            ' {nb} vélos sont disponibles et ',
+            ' un vélo est disponible et ',
+            ' aucun vélo n\'est disponible et ');
+
+        speech += conjugate(jcDecauxApiData.available_bike_stands,
+            ' {nb} places sont libres.     ',
+            ' une place est libre.     ',
+            ' aucune place n\'est libre.     ');
 
         return speech;
     },
